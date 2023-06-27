@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Photon.Pun;
 
 public class GameManager : MonoBehaviour
 {
@@ -18,12 +19,14 @@ public class GameManager : MonoBehaviour
 
     private List<Button> rowButtons;
     private List<Button> columnButtons;
+    private List<Button> diagonalButtons;
 
     // Start is called before the first frame update
     void Start()
     {
         rowButtons = new List<Button>();
         columnButtons = new List<Button>();
+        diagonalButtons = new List<Button>();
         Won.SetActive(false);
 
         player1Turn = true;
@@ -33,6 +36,17 @@ public class GameManager : MonoBehaviour
             for(int j = 0; j < ButtonList.Count; j += 3)
             {
                 columnButtons.Add(ButtonList[i + j]);
+            }
+        }
+        for(int i = 0; i < 1; i++)
+        {
+            for(int j = 0; j < ButtonList.Count; j += 4)
+            {
+                diagonalButtons.Add(ButtonList[i + j]);
+            }
+            for(int k = 2; k < ButtonList.Count -1; k += 2)
+            {
+                diagonalButtons.Add(ButtonList[i + k]);
             }
         }
     }
@@ -56,9 +70,9 @@ public class GameManager : MonoBehaviour
                 spawnedGO.transform.localScale = new Vector2(0.16f, 0.16f);
                 player1Turn = false;
                 player2Turn = true;
-                //CheckDiagonal(ButtonNo);
-                CheckRowCompleted(ButtonNo);
-                CheckColumnCompleted(ButtonNo);
+                CheckDiagonal();
+                CheckRowCompleted();
+                CheckColumnCompleted();
             }
             else if (player2Turn)
             {
@@ -67,9 +81,9 @@ public class GameManager : MonoBehaviour
                 spawnedGO.transform.localScale = new Vector2(0.16f, 0.16f);
                 player1Turn = true;
                 player2Turn = false;
-                //CheckDiagonal(ButtonNo);
-                CheckRowCompleted(ButtonNo);
-                CheckColumnCompleted(ButtonNo);
+                CheckDiagonal();
+                CheckRowCompleted();
+                CheckColumnCompleted();
             }
         }
         else
@@ -78,17 +92,62 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    //private void CheckDiagonal(int clickedButton)
-    //{
-    //    if(clickedButton == 0 || clickedButton == 2 || clickedButton == 4 || clickedButton == 6 || clickedButton == 8)
-    //    {
-    //        for (int i = 0; i < 2; i++)
-    //        {
+    private void CheckDiagonal()
+    {
+        int d1XCount = 0, d1YCount = 0;
+        for(int i = 0; i < 1; i++)
+        {
+            for(int j = 0; j < diagonalButtons.Count; j++)
+            {
+                int rowAndColumn = i + j;
+                Debug.Log("DDD" + d1XCount + " " + d1YCount);
+                if (diagonalButtons[rowAndColumn].transform.childCount > 0)
+                {
+                    if (diagonalButtons[rowAndColumn].transform.GetChild(0).transform.CompareTag("Set1"))
+                    {
+                        if(rowAndColumn < 3)
+                        {
+                            d1XCount++;
+                        }
+                    }
+                    else if(diagonalButtons[rowAndColumn].transform.GetChild(0).transform.CompareTag("Set2"))
+                    {
+                        if(rowAndColumn < 3)
+                        {
+                            d1YCount++;
+                        }
+                    }
 
-    //        }
-    //    }
-    //}
-    private void CheckRowCompleted(int clickedButton)
+                    if (d1XCount == 3 || d1YCount == 3)
+                    {
+                        GameWon();
+                    }
+                }
+                else
+                {
+                    Debug.Log("No Child Found");
+                }
+                
+                //if(diagonalButtons[i + k].transform.childCount > 0)
+                //{
+                //    if (diagonalButtons[i + k].transform.GetChild(0).transform.CompareTag("Set1"))
+                //    {
+                //        d2XCount++;
+                //    }
+                //    else if (diagonalButtons[i + k].transform.GetChild(0).transform.CompareTag("Set2"))
+                //    {
+                //        d2YCount++;
+                //    }
+
+                //    if (d2XCount == 3 || d2YCount == 3)
+                //    {
+                //        GameWon();
+                //    }
+                //}
+            }
+        }
+    }
+    private void CheckRowCompleted()
     {
         int r1XCount = 0, r2XCount = 0, r3XCount = 0, r1YCount = 0, r2YCount = 0, r3YCount = 0;
 
@@ -151,14 +210,14 @@ public class GameManager : MonoBehaviour
             }
         }
     }    
-    private void CheckColumnCompleted(int clickedButton)
+    private void CheckColumnCompleted()
     {
         int c1XCount = 0, c2XCount = 0, c3XCount = 0, c1YCount = 0, c2YCount = 0, c3YCount = 0;
         for(int i = 0; i < 3; i++)
         {
             for(int j = 0; j < columnButtons.Count; j += 3)
             {
-                Debug.Log("CCC" + c1XCount + " " + c2XCount + " " + c3XCount + " " + c1YCount + " " + c2YCount + " " + c3YCount);
+                //Debug.Log("CCC" + c1XCount + " " + c2XCount + " " + c3XCount + " " + c1YCount + " " + c2YCount + " " + c3YCount);
                 int rowAndColumn = i + j;
                 if (columnButtons[rowAndColumn].transform.childCount > 0)
                 {
