@@ -74,22 +74,25 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Clicked" + PhotonNetwork.IsMasterClient + " " + isFirstPlayerTurn);
         int childCount = ButtonList[ButtonNo].transform.childCount;
+        Debug.Log("ChildCount" + ButtonList[ButtonNo].transform.childCount);
         if (childCount == 0)
         {
             if (playerNumber == 1 && isFirstPlayerTurn)
             {
                 // Player 1 (host) logic
                 GameObject spawnedGO = PhotonNetwork.Instantiate(FirstGO.name, ButtonList[ButtonNo].transform.position, Quaternion.identity);
-                spawnedGO.transform.position = new Vector2(ButtonList[ButtonNo].transform.position.x, ButtonList[ButtonNo].transform.position.y + 0.5f);
-                spawnedGO.transform.localScale = new Vector2(0.16f, 0.16f);
+                spawnedGO.transform.SetParent(ButtonList[ButtonNo].transform);
+                //spawnedGO.transform.position = new Vector2(ButtonList[ButtonNo].transform.position.x, ButtonList[ButtonNo].transform.position.y + 0.5f);
+                //spawnedGO.transform.localScale = new Vector2(0.16f, 0.16f);
                 isFirstPlayerTurn = false;
             }
             else if (playerNumber == 2 && !isFirstPlayerTurn)
             {
                 // Player 2 (client) logic
                 GameObject spawnedGO = PhotonNetwork.Instantiate(SecondGO.name, ButtonList[ButtonNo].transform.position, Quaternion.identity);
-                spawnedGO.transform.position = new Vector2(ButtonList[ButtonNo].transform.position.x, ButtonList[ButtonNo].transform.position.y + 0.5f);
-                spawnedGO.transform.localScale = new Vector2(0.16f, 0.16f);
+                spawnedGO.transform.SetParent(ButtonList[ButtonNo].transform);
+                //spawnedGO.transform.position = new Vector2(ButtonList[ButtonNo].transform.position.x, ButtonList[ButtonNo].transform.position.y + 0.5f);
+                //spawnedGO.transform.localScale = new Vector2(0.16f, 0.16f);
                 isFirstPlayerTurn = true;
             }
 
@@ -124,7 +127,7 @@ public class GameManager : MonoBehaviour
             for(int j = 0; j < diagonalButtons.Count; j++)
             {
                 int rowAndColumn = i + j;
-                Debug.Log("DDD" + d1XCount + " " + d1YCount);
+                //Debug.Log("DDD" + d1XCount + " " + d1YCount);
                 if (diagonalButtons[rowAndColumn].transform.childCount > 0)
                 {
                     if (diagonalButtons[rowAndColumn].transform.GetChild(0).transform.CompareTag("Set1"))
@@ -149,7 +152,7 @@ public class GameManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("No Child Found");
+                   //Debug.Log("No Child Found");
                 }
                 
             }
@@ -160,14 +163,17 @@ public class GameManager : MonoBehaviour
         Debug.Log("Row Called");
         int r1XCount = 0, r2XCount = 0, r3XCount = 0, r1YCount = 0, r2YCount = 0, r3YCount = 0;
 
-        Debug.Log("row" + rowButtons.Count);
+       // Debug.Log("row" + rowButtons.Count);
         for(int i = 0; i < rowButtons.Count; i += 3)
         {
             for(int j=0; j < 3; j++)
             {
+                //Debug.Log("Inside row");
                 int rowAndColumn = i + j;
+                //Debug.Log("i +j" + (i + j));
                 if (rowButtons[rowAndColumn].transform.childCount > 0)
                 {
+                   // Debug.Log("rrr" + r1XCount + " " + r2XCount + " " + r3XCount + " " + r1YCount + " " + r2YCount + " " + r3YCount + " " + rowButtons[rowAndColumn].transform.GetChild(0).transform.tag);
                     //Debug.Log("ii" + (i + j));
                     if (rowButtons[rowAndColumn].transform.GetChild(0).transform.CompareTag("Set1")){
 
@@ -187,6 +193,7 @@ public class GameManager : MonoBehaviour
                         //Debug.Log(xCount + " " + rowButtons[i + j].transform.GetChild(0).transform.tag);
                         if (r1XCount == 3 || r2XCount == 3 || r3XCount == 3)
                         {
+                            Debug.Log("Wonn");
                             GameWon();
                         }
                     }
@@ -214,14 +221,14 @@ public class GameManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("No Child Found");
+                    //Debug.Log("No Child Found");
                 }
             }
         }
     }    
     private void CheckColumnCompleted()
     {
-        Debug.Log("Column Called");
+        //Debug.Log("Column Called");
         int c1XCount = 0, c2XCount = 0, c3XCount = 0, c1YCount = 0, c2YCount = 0, c3YCount = 0;
         for(int i = 0; i < 3; i++)
         {
@@ -278,7 +285,7 @@ public class GameManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("No Child Found");
+                   //Debug.Log("No Child Found");
                 }
             }
         }
