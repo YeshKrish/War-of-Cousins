@@ -12,16 +12,20 @@ public class GameManager : MonoBehaviour
 
     public List<Button> ButtonList = new List<Button>();
 
-    private bool player1Turn = false;
-    private bool player2Turn = false;
+    //private bool player1Turn = false;
+    //private bool player2Turn = false;
 
-    private bool gameWon = false;
+    public int playerNumber; // 1 for Player 1 (host), 2 for Player 2 (client)
+    public bool isFirstPlayerTurn;
 
     private List<Button> rowButtons;
     private List<Button> columnButtons;
     private List<Button> diagonalButtons;
 
-    // Start is called before the first frame update
+    private GameObject player;
+
+    private PhotonView photonView;
+
     void Start()
     {
         rowButtons = new List<Button>();
@@ -29,7 +33,22 @@ public class GameManager : MonoBehaviour
         diagonalButtons = new List<Button>();
         Won.SetActive(false);
 
-        player1Turn = true;
+        photonView = GetComponent<PhotonView>();
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // The host player is always Player 1
+            playerNumber = 1;
+        }
+        else
+        {
+            // The client player is always Player 2
+            playerNumber = 2;
+        }
+
+        // Set the initial turn based on the player number
+        isFirstPlayerTurn = (playerNumber == 1);
+
         rowButtons = ButtonList;
         for(int i = 0; i < 3; i++)
         {
@@ -51,49 +70,54 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
-    void Update()
+    public void SpawnGO(int ButtonNo)
     {
-        
-    }
-
-    public void SpwanGO(int ButtonNo)
-    {
-        Debug.Log("Clicked");
+        Debug.Log("Clicked" + PhotonNetwork.IsMasterClient + " " + isFirstPlayerTurn);
         int childCount = ButtonList[ButtonNo].transform.childCount;
-        if(childCount == 0)
+        if (childCount == 0)
         {
-            if (player1Turn)
+            if (playerNumber == 1 && isFirstPlayerTurn)
             {
-                GameObject spawnedGO = (GameObject) Instantiate(FirstGO, ButtonList[ButtonNo].transform);
+                // Player 1 (host) logic
+                GameObject spawnedGO = PhotonNetwork.Instantiate(FirstGO.name, ButtonList[ButtonNo].transform.position, Quaternion.identity);
                 spawnedGO.transform.position = new Vector2(ButtonList[ButtonNo].transform.position.x, ButtonList[ButtonNo].transform.position.y + 0.5f);
                 spawnedGO.transform.localScale = new Vector2(0.16f, 0.16f);
-                player1Turn = false;
-                player2Turn = true;
-                CheckDiagonal();
-                CheckRowCompleted();
-                CheckColumnCompleted();
+                isFirstPlayerTurn = false;
             }
-            else if (player2Turn)
+            else if (playerNumber == 2 && !isFirstPlayerTurn)
             {
-                GameObject spawnedGO = (GameObject)Instantiate(SecondGO, ButtonList[ButtonNo].transform);
+                // Player 2 (client) logic
+                GameObject spawnedGO = PhotonNetwork.Instantiate(SecondGO.name, ButtonList[ButtonNo].transform.position, Quaternion.identity);
                 spawnedGO.transform.position = new Vector2(ButtonList[ButtonNo].transform.position.x, ButtonList[ButtonNo].transform.position.y + 0.5f);
                 spawnedGO.transform.localScale = new Vector2(0.16f, 0.16f);
-                player1Turn = true;
-                player2Turn = false;
-                CheckDiagonal();
-                CheckRowCompleted();
-                CheckColumnCompleted();
+                isFirstPlayerTurn = true;
             }
+
+            // Perform other game logic here
+            CheckDiagonal();
+            CheckRowCompleted();
+            CheckColumnCompleted();
+
+            // Call the method to synchronize the isFirstPlayerTurn variable across the network
+            photonView.RPC("SyncTurn", RpcTarget.All, isFirstPlayerTurn);
+
         }
         else
         {
-            Debug.Log("Already has val");
+            Debug.Log("Already has value");
         }
+    }
+
+    // Remote Procedure Call (RPC) method to synchronize the isFirstPlayerTurn variable across the network
+    [PunRPC]
+    private void SyncTurn(bool turn)
+    {
+        isFirstPlayerTurn = turn;
     }
 
     private void CheckDiagonal()
     {
+        Debug.Log("Diagonal Called");
         int d1XCount = 0, d1YCount = 0;
         for(int i = 0; i < 1; i++)
         {
@@ -128,27 +152,12 @@ public class GameManager : MonoBehaviour
                     Debug.Log("No Child Found");
                 }
                 
-                //if(diagonalButtons[i + k].transform.childCount > 0)
-                //{
-                //    if (diagonalButtons[i + k].transform.GetChild(0).transform.CompareTag("Set1"))
-                //    {
-                //        d2XCount++;
-                //    }
-                //    else if (diagonalButtons[i + k].transform.GetChild(0).transform.CompareTag("Set2"))
-                //    {
-                //        d2YCount++;
-                //    }
-
-                //    if (d2XCount == 3 || d2YCount == 3)
-                //    {
-                //        GameWon();
-                //    }
-                //}
             }
         }
     }
     private void CheckRowCompleted()
     {
+        Debug.Log("Row Called");
         int r1XCount = 0, r2XCount = 0, r3XCount = 0, r1YCount = 0, r2YCount = 0, r3YCount = 0;
 
         Debug.Log("row" + rowButtons.Count);
@@ -212,6 +221,7 @@ public class GameManager : MonoBehaviour
     }    
     private void CheckColumnCompleted()
     {
+        Debug.Log("Column Called");
         int c1XCount = 0, c2XCount = 0, c3XCount = 0, c1YCount = 0, c2YCount = 0, c3YCount = 0;
         for(int i = 0; i < 3; i++)
         {
@@ -276,7 +286,15 @@ public class GameManager : MonoBehaviour
 
     private void GameWon()
     {
-        Debug.Log("Game WOn");
+        if (PhotonNetwork.IsMasterClient)
+        {
+            photonView.RPC("HandleGameWon", RpcTarget.All);
+        }
+    }
+    [PunRPC]
+    private void HandleGameWon()
+    {
+        Debug.Log("Game Won");
         Won.SetActive(true);
     }
 }
